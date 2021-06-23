@@ -1,1 +1,5 @@
-file1: path/to/file1 # Add your own files that will be used in the pipeline
+METALIST:
+  D28: data/D28_male.txt
+
+ASSEMBLY:  /lustre/backup/WUR/ABGC/shared/ABGC_Projects/Turkey_Assembly/Mgal_WUR_HG_1.0.fa 
+ANNOTATION: /lustre/nobackup/WUR/ABGC/moiti001/results/Mgal_WUR_HG_1.0/annotation_funannotate/predict_results/mgal.gff3
