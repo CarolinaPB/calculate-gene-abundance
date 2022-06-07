@@ -1,7 +1,4 @@
-# Download metadata from NCBI run selector. Must have all the
-# METALIST:
-#   # D28: data/D28_male.txt
-#   D28: data/D28.txt
-METALIST: data/D28.txt
-ASSEMBLY:  /lustre/backup/WUR/ABGC/shared/ABGC_Projects/Turkey_Assembly/Mgal_WUR_HG_1.0.fa 
-ANNOTATION: /lustre/nobackup/WUR/ABGC/moiti001/results/Mgal_WUR_HG_1.0/annotation_funannotate/predict_results/mgal.gff3
+METALIST: /path/to/metalist.txt
+ASSEMBLY:  /path/to/assembly.fa
+ANNOTATION: /path/to/annotation.gff3
+OUTDIR: /path/to/outdir
