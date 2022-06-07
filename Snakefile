@@ -1,5 +1,10 @@
-configfile: "config.yaml"
+#################################
+# author: Carolina Pita Barros  #
+# carolina.pitabarros@wur.nl    #
+# date: July 2021            #
+#################################
 
+configfile: "config.yaml"
 
 from snakemake.utils import makedirs
 import pandas as pd
@@ -19,23 +24,11 @@ if "OUTDIR" in config:
     workdir: config["OUTDIR"]
 makedirs("logs_slurm")
 
-RUNS = set()
-
+# Get SRA codes of data to download
 metadata_table = pd.read_table(METADATA, sep=",")
-run = set(metadata_table.Run)
-RUNS = RUNS | run #remove?
+RUNS = set(metadata_table.Run)
 
-
-# def get_assembly_prefix(assembly):
-#     assembly.stem
-#     # pref = assembly.rsplit("/", 1)[-1]
-#     # prefix = pref.rsplit(".", 1)[0]
-#     return(prefix)
-# get_assembly_prefix(ASSEMBLY)
-
-
-PREF = ASSEMBLY.stem
-
+PREF = Path(ASSEMBLY).stem
 
 
 localrules:
@@ -50,8 +43,10 @@ rule all:
         expand("results/{SRA}/gene_abundance_{SRA}.txt", SRA=RUNS),
         "results/all_abundances.txt",
 
-
-rule fastq_dump:
+rule fastq_dump:    
+    """
+    Download data from SRA
+    """
     output:
         "fastq/{SRA}.fastq",
     message:
@@ -64,6 +59,9 @@ rule fastq_dump:
         "fasterq-dump.2.11.0 -e 16 --outdir fastq {params}"
 
 rule combine_fastq:
+    """
+    If a sample has forward and reverse reads, merge both into one unique fastq
+    """
     input:
         in1 = 'fastq/{SRA}_1.fastq',
         in2 = 'fastq/{SRA}_2.fastq'
@@ -75,6 +73,9 @@ rule combine_fastq:
         'reformat.sh in1={input.in1} in2={input.in2} out={output}'
 
 rule hisat_build:
+    """
+    Index genome
+    """
     input:
         ASSEMBLY,
     output:
@@ -88,6 +89,9 @@ rule hisat_build:
 
 
 rule hisat:
+    """
+    Align RNA-seq reads to genome
+    """
     input:
         fq=rules.fastq_dump.output,
         idx=rules.hisat_build.output,
@@ -122,6 +126,9 @@ rule sort_hisat:
 
 
 rule stringtie:
+    """
+    Assemble RNA-seq alignments into potential transcripts
+    """
     input:
         bam=rules.sort_hisat.output.bam,
         annotation=ANNOTATION,
@@ -147,6 +154,9 @@ rule stringtie:
         """
 
 rule create_list:
+    """
+    Create list with gtf files to merge
+    """
     input:
         expand("before_merge/{SRA}/{SRA}.gtf", SRA=RUNS),
     output:
@@ -161,6 +171,10 @@ rule create_list:
 
 
 rule stringtie_merge:
+    """
+    Create non-redundant set of trasncripts from list of transcripts. 
+    Creates one set of transcripts for all RNA-seq samples.
+    """
     input:
         list_to_merge=rules.create_list.output,
         annotation=ANNOTATION,
@@ -177,6 +191,9 @@ rule stringtie_merge:
 
 
 rule stringtie_after_merge:
+    """
+    Re-estimate transcript abundances for each sample
+    """
     input:
         bam=rules.sort_hisat.output.bam,
         annotation=rules.stringtie_merge.output,
@@ -203,8 +220,12 @@ rule stringtie_after_merge:
 
 
 rule add_info_to_stringtie:
+    """
+    Add run, age and tissue data to stringtie results
+    """
     input:
         rules.stringtie_after_merge.output.abundance,
+        METADATA
     output:
         "results/{SRA}/gene_abundance_{SRA}.txt",
     message:
@@ -215,17 +236,21 @@ rule add_info_to_stringtie:
         "{SRA}",
     run:
         abundance = pd.read_table(input[0])
-        details = metadata_table[metadata_table["Run"] == params[0]]
+        metadata = pd.read_table(input[1], sep=",")
+        details = metadata[metadata["Run"] == params[0]]
         details_subset = details[["Run", "AGE", "tissue"]]
-        details_subset = details_subset.reset_index()
+        details_subset.reset_index(inplace=True)
         combined_tables = pd.concat([abundance, details_subset], axis=1)
         combined_tables["Run"] = combined_tables.iloc[0]["Run"]
         combined_tables["AGE"] = combined_tables.iloc[0]["AGE"]
         combined_tables["tissue"] = combined_tables.iloc[0]["tissue"]
-        combined_tables.to_csv(output[0], sep="\t")
+        combined_tables.to_csv(output[0], sep="\t", index=False)
 
 
 rule concat_res:
+    """
+    Combine abundance results from each sample into one final file
+    """
     input:
         expand("results/{SRA}/gene_abundance_{SRA}.txt", SRA=RUNS),
     output:

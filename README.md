@@ -1,68 +1,17 @@
-# snakemake-template
-Template directory for creating a snakemake pipeline
+# Assemble transcriptome and calculate gene/transcript abundance
 
-## To use this repository as a template:
-Click the "use this template" button
+## First follow the instructions here:
+[Step by step guide on how to use my pipelines](https://carolinapb.github.io/2021-06-23-how-to-run-my-pipelines/)  
+Click [here](https://github.com/CarolinaPB/snakemake-template/blob/master/Short%20introduction%20to%20Snakemake.pdf) for an introduction to Snakemake
 
-## Other instructions
-Install `conda` if you don't have it
+## ABOUT
 
-### Create conda environment
+This is a pipeline that aligns raw RNA-seq reads (downloaded from SRA) to a genome and quantifies gene abundance.
 
-Recommended - give the profile a name related to your pipeline (ex: polish-assembly)
+#### Tools used:
+- [fasterq-dump](https://github.com/ncbi/sra-tools/wiki/HowTo:-fasterq-dump) - download records from SRA
+- [BBMAP (reformat.sh)](https://jgi.doe.gov/data-and-tools/software-tools/bbtools/bb-tools-user-guide/bbmap-guide/) - combine paired reads into one fastq
+- [Hisat2](http://daehwankimlab.github.io/hisat2/manual/) - align RNA-seq to genome
+- [Samtools](http://www.htslib.org/) - sort and index mapped reads
+- [stringtie](https://ccb.jhu.edu/software/stringtie/#:~:text=StringTie%20is%20a%20fast%20and,variants%20for%20each%20gene%20locus.) - assemble alignments into transcripts
 
-```
-conda create --name <env> --file requirements.txt
-```
-
-(by creating an environment from requirements.txt you'll be creating and environment that already has snakemake)
-### Activate environment
-```
-conda activate <env>
-```
-
-### To deactivate the environment (if you want to leave the conda environment)
-```
-conda deactivate
-```
-
-### Create hpc config file ([good example](https://www.sichong.site/2020/02/25/snakemake-and-slurm-how-to-manage-workflow-with-resource-constraint-on-hpc/))
-
-Necessary for snakemake to prepare and send jobs.   
-Recommended - give the profile a name related to this pipeline (ex: polish-assembly)
-
-#### Start with creating the directory
-```
-mkdir -p ~/.config/snakemake/<profile name>
-```
-
-#### Add config.yaml to that directory and add the specifications:
-```
-jobs: 10
-cluster: "sbatch -t 1:0:0 --mem=16000 -c 16 --job-name={rule} --exclude=fat001,fat002,fat101,fat100 --output=logs_slurm/{rule}.out --error=logs_slurm/{rule}.err"
-
-use-conda: true
-```
-(change the options between square brackets)
-
-## How to run
-
-First it's good to always make a dry run: shows if there are any problems with the rules and we can use it to look at the commands and verify that all the fields are in the correct place
-
-Dry run (prints execution plan and commands that will be run)
-```
-snakemake -np 
-```
-Run in the HPC 
-```
-snakemake --profile <profile name>
-```
-
-Other flags:
-- --forceall : run all the steps, even if it's not needed
-- --rerun-incomplete : rerun incomplete steps
-- -R [rulename] : run this specific rule
-- --max-jobs-per-second \<N> : sometimes there are some problems with the job timings/ many jobs being submitted at once so it's good to choose a low number
-
---------
-If running the rules using slurm it's important that the logs_slurm directory has been created beforehand
