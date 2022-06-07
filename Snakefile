@@ -258,4 +258,4 @@ rule concat_res:
     message:
         "Rule {rule} processing"
     shell:
-        "cat {input} > {output}"
+        "awk 'FNR>1 || NR==1' {input} > {output}"
