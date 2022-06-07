@@ -48,7 +48,7 @@ rule fastq_dump:
     Download data from SRA
     """
     output:
-        "fastq/{SRA}.fastq",
+        temp("fastq/{SRA}.fastq"),
     message:
         "Rule {rule} processing"
     group:
@@ -66,7 +66,7 @@ rule combine_fastq:
         in1 = 'fastq/{SRA}_1.fastq',
         in2 = 'fastq/{SRA}_2.fastq'
     output:
-        'fastq/{SRA}.fastq'
+        temp('fastq/{SRA}.fastq')
     message:
         'Rule {rule} processing'
     shell:
@@ -133,8 +133,8 @@ rule stringtie:
         bam=rules.sort_hisat.output.bam,
         annotation=ANNOTATION,
     output:
-        gtf="before_merge/{SRA}/{SRA}.gtf",
-        abundance="before_merge/{SRA}/gene_abundance.tab",
+        gtf=temp("before_merge/{SRA}/{SRA}.gtf"),
+        abundance=temp("before_merge/{SRA}/gene_abundance.tab"),
     message:
         "Rule {rule} processing"
     group:
@@ -160,7 +160,7 @@ rule create_list:
     input:
         expand("before_merge/{SRA}/{SRA}.gtf", SRA=RUNS),
     output:
-        "list_to_merge.txt",
+        temp("list_to_merge.txt"),
     message:
         "Rule {rule} processing"
     run:
