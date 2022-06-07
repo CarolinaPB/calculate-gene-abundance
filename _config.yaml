@@ -11,7 +11,7 @@ navbar-links:
     - Population mapping: https://carolinapb.github.io/population-mapping
     - Nanopore assembly and var calling: https://carolinapb.github.io/nanopore-assembly
     - Population variant calling: https://carolinapb.github.io/population-variant-calling/
-    - Population variant calling: https://carolinapb.github.io/calculate-gene-abundance/
+    - Calculate gene abundance: https://carolinapb.github.io/calculate-gene-abundance/
     
 # author: Carolina Pita Barros
 
