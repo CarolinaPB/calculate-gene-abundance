@@ -96,7 +96,8 @@ rule hisat:
         fq=rules.fastq_dump.output,
         idx=rules.hisat_build.output,
     output:
-        temp("reads/{SRA}.sam"),
+        sam = temp("reads/{SRA}.sam"),
+        summary = "reads/{SRA}_alignment_summary.txt"
     message:
         "Rule {rule} processing"
     params:
@@ -104,12 +105,12 @@ rule hisat:
     group:
         "group_{SRA}"
     shell:
-        "hisat2 -x {params} {input.fq} > {output}"
+        "hisat2 -x {params} {input.fq} --summary-file {output.summary} > {output.sam}"
 
 
 rule sort_hisat:
     input:
-        rules.hisat.output,
+        rules.hisat.output.sam,
     output:
         bam="reads/{SRA}.bam",
         bai="reads/{SRA}.bam.bai",
